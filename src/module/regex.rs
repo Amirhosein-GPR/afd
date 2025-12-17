@@ -9,7 +9,7 @@ pub struct RegexContainer {
     pub target_label: Regex,
     pub target_address: Regex,
     pub gem5_trace_indirect_branch: Regex,
-    pub indirect_branches: Regex,
+    pub indirect_branch: Regex,
 }
 
 impl RegexContainer {
@@ -28,7 +28,7 @@ impl RegexContainer {
            target_label: Regex::new(r"<\w+>$").unwrap(),
            target_address: Regex::new(r"(\w+)(?:\s+<.+>)?$").unwrap(),
            gem5_trace_indirect_branch: Regex::new(r"Commit branch:.*PC:0x(\w+) .*Indirect.*target:0x(\w+)").unwrap(),
-           indirect_branches: Regex::new(r"(\w+):.+(?:(?:blrabz)|(?:blrab)|(?:blraaz)|(?:blraa)|(?:blr)|(?:br)|(?:ret)|(?:cbnz)|(?:cbz)|(?:tbnz)|(?:tbz))\s+x[0123]+").unwrap()
+           indirect_branch: Regex::new(r"(\w+):.+(?:(?:blrabz)|(?:blrab)|(?:blraaz)|(?:blraa)|(?:blr)|(?:br)|(?:ret)|(?:cbnz)|(?:cbz)|(?:tbnz)|(?:tbz))\s+x[0123]+").unwrap()
         }
     }
 }

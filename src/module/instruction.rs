@@ -22,86 +22,86 @@ impl BranchType {
 /// Represents conditional branch instrutions in ARM architecture.
 #[derive(Debug, PartialEq, Eq, Hash, Clone)]
 pub enum ConditionalBranch {
-    BDotEQ,
-    BDotNE,
-    BDotCS,
-    BDotCC,
-    BDotMI,
-    BDotPL,
-    BDotVS,
-    BDotVC,
-    BDotHI,
-    BDotLS,
-    BDotGE,
-    BDotLT,
-    BDotGT,
-    BDotLE,
-    BDotAL,
-    BDotNV,
+    BDotEq,
+    BDotNe,
+    BDotCs,
+    BDotCc,
+    BDotMi,
+    BDotPl,
+    BDotVs,
+    BDotVc,
+    BDotHi,
+    BDotLs,
+    BDotGe,
+    BDotLt,
+    BDotGt,
+    BDotLe,
+    BDotAl,
+    BDotNv,
 
-    BCDotEQ,
-    BCDotNE,
-    BCDotCS,
-    BCDotCC,
-    BCDotMI,
-    BCDotPL,
-    BCDotVS,
-    BCDotVC,
-    BCDotHI,
-    BCDotLS,
-    BCDotGE,
-    BCDotLT,
-    BCDotGT,
-    BCDotLE,
-    BCDotAL,
-    BCDotNV,
+    BCDotEq,
+    BCDotNe,
+    BCDotCs,
+    BCDotCc,
+    BCDotMi,
+    BCDotPl,
+    BCDotVs,
+    BCDotVc,
+    BCDotHi,
+    BCDotLs,
+    BCDotGe,
+    BCDotLt,
+    BCDotGt,
+    BCDotLe,
+    BCDotAl,
+    BCDotNv,
 
-    CBZ,
-    CBNZ,
-    TBZ,
-    TBNZ,
+    Cbz,
+    Cbnz,
+    Tbz,
+    Tbnz,
 }
 
 impl ConditionalBranch {
     /// Returns the corresponding string values for each type of conditional branch instructions.
     pub fn value(&self) -> &str {
         match self {
-            ConditionalBranch::BDotEQ => "b.eq",
-            ConditionalBranch::BDotNE => "b.ne",
-            ConditionalBranch::BDotCS => "b.cs",
-            ConditionalBranch::BDotCC => "b.cc",
-            ConditionalBranch::BDotMI => "b.mi",
-            ConditionalBranch::BDotPL => "b.pl",
-            ConditionalBranch::BDotVS => "b.vs",
-            ConditionalBranch::BDotVC => "b.vc",
-            ConditionalBranch::BDotHI => "b.hi",
-            ConditionalBranch::BDotLS => "b.ls",
-            ConditionalBranch::BDotGE => "b.ge",
-            ConditionalBranch::BDotLT => "b.lt",
-            ConditionalBranch::BDotGT => "b.gt",
-            ConditionalBranch::BDotLE => "b.le",
-            ConditionalBranch::BDotAL => "b.al",
-            ConditionalBranch::BDotNV => "b.nv",
-            ConditionalBranch::BCDotEQ => "bc.eq",
-            ConditionalBranch::BCDotNE => "bc.ne",
-            ConditionalBranch::BCDotCS => "bc.cs",
-            ConditionalBranch::BCDotCC => "bc.cc",
-            ConditionalBranch::BCDotMI => "bc.mi",
-            ConditionalBranch::BCDotPL => "bc.pl",
-            ConditionalBranch::BCDotVS => "bc.vs",
-            ConditionalBranch::BCDotVC => "bc.vc",
-            ConditionalBranch::BCDotHI => "bc.hi",
-            ConditionalBranch::BCDotLS => "bc.ls",
-            ConditionalBranch::BCDotGE => "bc.ge",
-            ConditionalBranch::BCDotLT => "bc.lt",
-            ConditionalBranch::BCDotGT => "bc.gt",
-            ConditionalBranch::BCDotLE => "bc.le",
-            ConditionalBranch::BCDotAL => "bc.al",
-            ConditionalBranch::BCDotNV => "bc.nv",
-            ConditionalBranch::CBZ => "cbz",
-            ConditionalBranch::CBNZ => "cbnz",
-            ConditionalBranch::TBZ => "tbz",
-            ConditionalBranch::TBNZ => "tbnz",
+            ConditionalBranch::BDotEq => "b.eq",
+            ConditionalBranch::BDotNe => "b.ne",
+            ConditionalBranch::BDotCs => "b.cs",
+            ConditionalBranch::BDotCc => "b.cc",
+            ConditionalBranch::BDotMi => "b.mi",
+            ConditionalBranch::BDotPl => "b.pl",
+            ConditionalBranch::BDotVs => "b.vs",
+            ConditionalBranch::BDotVc => "b.vc",
+            ConditionalBranch::BDotHi => "b.hi",
+            ConditionalBranch::BDotLs => "b.ls",
+            ConditionalBranch::BDotGe => "b.ge",
+            ConditionalBranch::BDotLt => "b.lt",
+            ConditionalBranch::BDotGt => "b.gt",
+            ConditionalBranch::BDotLe => "b.le",
+            ConditionalBranch::BDotAl => "b.al",
+            ConditionalBranch::BDotNv => "b.nv",
+            ConditionalBranch::BCDotEq => "bc.eq",
+            ConditionalBranch::BCDotNe => "bc.ne",
+            ConditionalBranch::BCDotCs => "bc.cs",
+            ConditionalBranch::BCDotCc => "bc.cc",
+            ConditionalBranch::BCDotMi => "bc.mi",
+            ConditionalBranch::BCDotPl => "bc.pl",
+            ConditionalBranch::BCDotVs => "bc.vs",
+            ConditionalBranch::BCDotVc => "bc.vc",
+            ConditionalBranch::BCDotHi => "bc.hi",
+            ConditionalBranch::BCDotLs => "bc.ls",
+            ConditionalBranch::BCDotGe => "bc.ge",
+            ConditionalBranch::BCDotLt => "bc.lt",
+            ConditionalBranch::BCDotGt => "bc.gt",
+            ConditionalBranch::BCDotLe => "bc.le",
+            ConditionalBranch::BCDotAl => "bc.al",
+            ConditionalBranch::BCDotNv => "bc.nv",
+            ConditionalBranch::Cbz => "cbz",
+            ConditionalBranch::Cbnz => "cbnz",
+            ConditionalBranch::Tbz => "tbz",
+            ConditionalBranch::Tbnz => "tbnz",
         }
     }
 }
@@ -109,150 +109,93 @@ impl ConditionalBranch {
 /// Represents unconditional branch instrutions in ARM architecture.
 #[derive(Debug, PartialEq, Eq, Hash, Clone)]
 pub enum UnconditionalBranch {
-    DirectBranch(DirectBranch),
-    IndirectBranch(IndirectBranch),
+    B,
+    Bl,
+    Ret,
+    Br,
+    Blr,
+    Blraa,
+    Blraaz,
+    Blrab,
+    Blrabz,
 }
 
 impl UnconditionalBranch {
     /// Returns the corresponding string values for each type of unconditional branch instructions.
     pub fn value(&self) -> &str {
         match self {
-            UnconditionalBranch::DirectBranch(direct_branch) => direct_branch.value(),
-            UnconditionalBranch::IndirectBranch(indirect_branch) => indirect_branch.value(),
-        }
-    }
-}
-
-/// Represents direct unconditional branch instrutions in ARM architecture.
-#[derive(Debug, PartialEq, Eq, Hash, Clone)]
-pub enum DirectBranch {
-    B,
-    BL,
-    RET,
-}
-
-impl DirectBranch {
-    /// Returns the corresponding string values for each type of direct unconditional branch instructions.
-    pub fn value(&self) -> &str {
-        match self {
-            DirectBranch::B => "b",
-            DirectBranch::BL => "bl",
-            DirectBranch::RET => "ret",
-        }
-    }
-}
-
-/// Represents indirect unconditional branch instrutions in ARM architecture.
-#[derive(Debug, PartialEq, Eq, Hash, Clone)]
-pub enum IndirectBranch {
-    BR,
-    BLR,
-    BLRAA,
-    BLRAAZ,
-    BLRAB,
-    BLRABZ,
-}
-
-impl IndirectBranch {
-    /// Returns the corresponding string values for each type of indirect unconditional branch instructions.
-    pub fn value(&self) -> &str {
-        match self {
-            IndirectBranch::BR => "br",
-            IndirectBranch::BLR => "blr",
-            IndirectBranch::BLRAA => "blraa",
-            IndirectBranch::BLRAAZ => "blraaz",
-            IndirectBranch::BLRAB => "blrab",
-            IndirectBranch::BLRABZ => "blrabz",
+            UnconditionalBranch::B => "b",
+            UnconditionalBranch::Bl => "bl",
+            UnconditionalBranch::Ret => "ret",
+            UnconditionalBranch::Br => "br",
+            UnconditionalBranch::Blr => "blr",
+            UnconditionalBranch::Blraa => "blraa",
+            UnconditionalBranch::Blraaz => "blraaz",
+            UnconditionalBranch::Blrab => "blrab",
+            UnconditionalBranch::Blrabz => "blrabz",
         }
     }
 }
 
 #[derive(PartialEq, Eq, Hash, Clone)]
-pub enum AssemblyInstruction {
-    CTI(ControlTransferInstruction),
-    NCTI(NonControlTransferInstruction),
+pub enum InstructionType {
+    Cti(CtiData),
+    Ncti,
 }
 
-impl AssemblyInstruction {
-    pub fn formatted_string(&self) -> String {
-        match self {
-            AssemblyInstruction::CTI(control_transfer_instruction) => {
-                control_transfer_instruction.formatted_string()
-            }
-            AssemblyInstruction::NCTI(non_control_transfer_instruction) => {
-                non_control_transfer_instruction.formatted_string()
-            }
-        }
-    }
-
-    pub fn raw_content(&self) -> &str {
-        match self {
-            AssemblyInstruction::CTI(control_transfer_instruction) => {
-                control_transfer_instruction.raw_content()
-            }
-            AssemblyInstruction::NCTI(non_control_transfer_instruction) => {
-                non_control_transfer_instruction.raw_content()
-            }
-        }
-    }
-
-    pub fn address(&self) -> String {
-        match self {
-            AssemblyInstruction::CTI(cti) => cti.address.clone(),
-            AssemblyInstruction::NCTI(ncti) => ncti.address.clone(),
-        }
-    }
-
-    pub fn target_address(&self) -> Option<String> {
-        match self {
-            AssemblyInstruction::CTI(cti) => Some(cti.target_address.clone()),
-            AssemblyInstruction::NCTI(_ncti) => None,
-        }
-    }
+#[derive(PartialEq, Eq, Hash, Clone)]
+pub struct CtiData {
+    pub target_address: String,
+    pub branch_type: BranchType,
+    pub reachable: bool,
 }
 
 /// Represents a control transfaer instruction (aka, jump instruction) in an assembly file.
 ///
 /// It contains some useful information about each CTI.
 #[derive(PartialEq, Eq, Hash, Clone)]
-pub struct ControlTransferInstruction {
+pub struct AssemblyInstruction {
     raw_content: String,
     pub line_number: u32,
     pub address: String,
-    pub target_address: String,
-    pub branch_type: BranchType,
+    pub instruction_type: InstructionType,
 }
 
-impl ControlTransferInstruction {
+impl AssemblyInstruction {
     pub fn formatted_string(&self) -> String {
-        format!(
-            "Line Number: {}, Address: {}, Type: [CTI] ==> Target Address: {:?}, Branch Type: {:?}",
-            self.line_number, self.address, self.target_address, self.branch_type
-        )
+        match &self.instruction_type {
+            InstructionType::Cti(cti_data) => {
+                format!(
+                    "Line Number: {}, Address: {}, Type: [CTI] ==> Target Address: {:?}, Branch Type: {:?}, Reachable: {:?}",
+                    self.line_number,
+                    self.address,
+                    cti_data.target_address,
+                    cti_data.branch_type,
+                    cti_data.reachable
+                )
+            }
+            InstructionType::Ncti => {
+                format!(
+                    "Line Number: {}, Address: {}, Type: [NCTI]",
+                    self.line_number, self.address,
+                )
+            }
+        }
     }
 
     pub fn raw_content(&self) -> &str {
         &self.raw_content
     }
-}
 
-/// Represents any intsructions other than control transfer ones.
-#[derive(PartialEq, Eq, Hash, Clone)]
-pub struct NonControlTransferInstruction {
-    raw_content: String,
-    pub line_number: u32,
-    pub address: String,
-}
-
-impl NonControlTransferInstruction {
-    pub fn formatted_string(&self) -> String {
-        format!(
-            "Line Number: {}, Address: {}, Type: [NCTI]",
-            self.line_number, self.address
-        )
+    pub fn address(&self) -> String {
+        self.address.clone()
     }
-    pub fn raw_content(&self) -> &str {
-        &self.raw_content
+
+    pub fn target_address(&self) -> Option<String> {
+        match &self.instruction_type {
+            InstructionType::Cti(cti_data) => Some(cti_data.target_address.clone()),
+            InstructionType::Ncti => None,
+        }
     }
 }
 
@@ -269,141 +212,141 @@ pub fn determine_instruction_type(
 ) -> AssemblyInstruction {
     let branch_type = if let Some(found) = regex_container.branches.captures(assembly_line) {
         match found.get(1).unwrap().as_str() {
-            f if f == ConditionalBranch::BDotEQ.value() => {
-                Some(BranchType::ConditionalBranch(ConditionalBranch::BDotEQ))
+            f if f == ConditionalBranch::BDotEq.value() => {
+                Some(BranchType::ConditionalBranch(ConditionalBranch::BDotEq))
             }
-            f if f == ConditionalBranch::BDotNE.value() => {
-                Some(BranchType::ConditionalBranch(ConditionalBranch::BDotNE))
+            f if f == ConditionalBranch::BDotNe.value() => {
+                Some(BranchType::ConditionalBranch(ConditionalBranch::BDotNe))
             }
-            f if f == ConditionalBranch::BDotCS.value() => {
-                Some(BranchType::ConditionalBranch(ConditionalBranch::BDotCS))
+            f if f == ConditionalBranch::BDotCs.value() => {
+                Some(BranchType::ConditionalBranch(ConditionalBranch::BDotCs))
             }
-            f if f == ConditionalBranch::BDotCC.value() => {
-                Some(BranchType::ConditionalBranch(ConditionalBranch::BDotCC))
+            f if f == ConditionalBranch::BDotCc.value() => {
+                Some(BranchType::ConditionalBranch(ConditionalBranch::BDotCc))
             }
-            f if f == ConditionalBranch::BDotMI.value() => {
-                Some(BranchType::ConditionalBranch(ConditionalBranch::BDotMI))
+            f if f == ConditionalBranch::BDotMi.value() => {
+                Some(BranchType::ConditionalBranch(ConditionalBranch::BDotMi))
             }
-            f if f == ConditionalBranch::BDotPL.value() => {
-                Some(BranchType::ConditionalBranch(ConditionalBranch::BDotPL))
+            f if f == ConditionalBranch::BDotPl.value() => {
+                Some(BranchType::ConditionalBranch(ConditionalBranch::BDotPl))
             }
-            f if f == ConditionalBranch::BDotVS.value() => {
-                Some(BranchType::ConditionalBranch(ConditionalBranch::BDotVS))
+            f if f == ConditionalBranch::BDotVs.value() => {
+                Some(BranchType::ConditionalBranch(ConditionalBranch::BDotVs))
             }
-            f if f == ConditionalBranch::BDotVC.value() => {
-                Some(BranchType::ConditionalBranch(ConditionalBranch::BDotVC))
+            f if f == ConditionalBranch::BDotVc.value() => {
+                Some(BranchType::ConditionalBranch(ConditionalBranch::BDotVc))
             }
-            f if f == ConditionalBranch::BDotHI.value() => {
-                Some(BranchType::ConditionalBranch(ConditionalBranch::BDotHI))
+            f if f == ConditionalBranch::BDotHi.value() => {
+                Some(BranchType::ConditionalBranch(ConditionalBranch::BDotHi))
             }
-            f if f == ConditionalBranch::BDotLS.value() => {
-                Some(BranchType::ConditionalBranch(ConditionalBranch::BDotLS))
+            f if f == ConditionalBranch::BDotLs.value() => {
+                Some(BranchType::ConditionalBranch(ConditionalBranch::BDotLs))
             }
-            f if f == ConditionalBranch::BDotGE.value() => {
-                Some(BranchType::ConditionalBranch(ConditionalBranch::BDotGE))
+            f if f == ConditionalBranch::BDotGe.value() => {
+                Some(BranchType::ConditionalBranch(ConditionalBranch::BDotGe))
             }
-            f if f == ConditionalBranch::BDotLT.value() => {
-                Some(BranchType::ConditionalBranch(ConditionalBranch::BDotLT))
+            f if f == ConditionalBranch::BDotLt.value() => {
+                Some(BranchType::ConditionalBranch(ConditionalBranch::BDotLt))
             }
-            f if f == ConditionalBranch::BDotGT.value() => {
-                Some(BranchType::ConditionalBranch(ConditionalBranch::BDotGT))
+            f if f == ConditionalBranch::BDotGt.value() => {
+                Some(BranchType::ConditionalBranch(ConditionalBranch::BDotGt))
             }
-            f if f == ConditionalBranch::BDotLE.value() => {
-                Some(BranchType::ConditionalBranch(ConditionalBranch::BDotLE))
+            f if f == ConditionalBranch::BDotLe.value() => {
+                Some(BranchType::ConditionalBranch(ConditionalBranch::BDotLe))
             }
-            f if f == ConditionalBranch::BDotAL.value() => {
-                Some(BranchType::ConditionalBranch(ConditionalBranch::BDotAL))
+            f if f == ConditionalBranch::BDotAl.value() => {
+                Some(BranchType::ConditionalBranch(ConditionalBranch::BDotAl))
             }
-            f if f == ConditionalBranch::BDotNV.value() => {
-                Some(BranchType::ConditionalBranch(ConditionalBranch::BDotNV))
+            f if f == ConditionalBranch::BDotNv.value() => {
+                Some(BranchType::ConditionalBranch(ConditionalBranch::BDotNv))
             }
-            f if f == ConditionalBranch::BCDotEQ.value() => {
-                Some(BranchType::ConditionalBranch(ConditionalBranch::BCDotEQ))
+            f if f == ConditionalBranch::BCDotEq.value() => {
+                Some(BranchType::ConditionalBranch(ConditionalBranch::BCDotEq))
             }
-            f if f == ConditionalBranch::BCDotNE.value() => {
-                Some(BranchType::ConditionalBranch(ConditionalBranch::BCDotNE))
+            f if f == ConditionalBranch::BCDotNe.value() => {
+                Some(BranchType::ConditionalBranch(ConditionalBranch::BCDotNe))
             }
-            f if f == ConditionalBranch::BCDotCS.value() => {
-                Some(BranchType::ConditionalBranch(ConditionalBranch::BCDotCS))
+            f if f == ConditionalBranch::BCDotCs.value() => {
+                Some(BranchType::ConditionalBranch(ConditionalBranch::BCDotCs))
             }
-            f if f == ConditionalBranch::BCDotCC.value() => {
-                Some(BranchType::ConditionalBranch(ConditionalBranch::BCDotCC))
+            f if f == ConditionalBranch::BCDotCc.value() => {
+                Some(BranchType::ConditionalBranch(ConditionalBranch::BCDotCc))
             }
-            f if f == ConditionalBranch::BCDotMI.value() => {
-                Some(BranchType::ConditionalBranch(ConditionalBranch::BCDotMI))
+            f if f == ConditionalBranch::BCDotMi.value() => {
+                Some(BranchType::ConditionalBranch(ConditionalBranch::BCDotMi))
             }
-            f if f == ConditionalBranch::BCDotPL.value() => {
-                Some(BranchType::ConditionalBranch(ConditionalBranch::BCDotPL))
+            f if f == ConditionalBranch::BCDotPl.value() => {
+                Some(BranchType::ConditionalBranch(ConditionalBranch::BCDotPl))
             }
-            f if f == ConditionalBranch::BCDotVS.value() => {
-                Some(BranchType::ConditionalBranch(ConditionalBranch::BCDotVS))
+            f if f == ConditionalBranch::BCDotVs.value() => {
+                Some(BranchType::ConditionalBranch(ConditionalBranch::BCDotVs))
             }
-            f if f == ConditionalBranch::BCDotVC.value() => {
-                Some(BranchType::ConditionalBranch(ConditionalBranch::BCDotVC))
+            f if f == ConditionalBranch::BCDotVc.value() => {
+                Some(BranchType::ConditionalBranch(ConditionalBranch::BCDotVc))
             }
-            f if f == ConditionalBranch::BCDotHI.value() => {
-                Some(BranchType::ConditionalBranch(ConditionalBranch::BCDotHI))
+            f if f == ConditionalBranch::BCDotHi.value() => {
+                Some(BranchType::ConditionalBranch(ConditionalBranch::BCDotHi))
             }
-            f if f == ConditionalBranch::BCDotLS.value() => {
-                Some(BranchType::ConditionalBranch(ConditionalBranch::BCDotLS))
+            f if f == ConditionalBranch::BCDotLs.value() => {
+                Some(BranchType::ConditionalBranch(ConditionalBranch::BCDotLs))
             }
-            f if f == ConditionalBranch::BCDotGE.value() => {
-                Some(BranchType::ConditionalBranch(ConditionalBranch::BCDotGE))
+            f if f == ConditionalBranch::BCDotGe.value() => {
+                Some(BranchType::ConditionalBranch(ConditionalBranch::BCDotGe))
             }
-            f if f == ConditionalBranch::BCDotLT.value() => {
-                Some(BranchType::ConditionalBranch(ConditionalBranch::BCDotLT))
+            f if f == ConditionalBranch::BCDotLt.value() => {
+                Some(BranchType::ConditionalBranch(ConditionalBranch::BCDotLt))
             }
-            f if f == ConditionalBranch::BCDotGT.value() => {
-                Some(BranchType::ConditionalBranch(ConditionalBranch::BCDotGT))
+            f if f == ConditionalBranch::BCDotGt.value() => {
+                Some(BranchType::ConditionalBranch(ConditionalBranch::BCDotGt))
             }
-            f if f == ConditionalBranch::BCDotLE.value() => {
-                Some(BranchType::ConditionalBranch(ConditionalBranch::BCDotLE))
+            f if f == ConditionalBranch::BCDotLe.value() => {
+                Some(BranchType::ConditionalBranch(ConditionalBranch::BCDotLe))
             }
-            f if f == ConditionalBranch::BCDotAL.value() => {
-                Some(BranchType::ConditionalBranch(ConditionalBranch::BCDotAL))
+            f if f == ConditionalBranch::BCDotAl.value() => {
+                Some(BranchType::ConditionalBranch(ConditionalBranch::BCDotAl))
             }
-            f if f == ConditionalBranch::BCDotNV.value() => {
-                Some(BranchType::ConditionalBranch(ConditionalBranch::BCDotNV))
+            f if f == ConditionalBranch::BCDotNv.value() => {
+                Some(BranchType::ConditionalBranch(ConditionalBranch::BCDotNv))
             }
-            f if f == ConditionalBranch::CBZ.value() => {
-                Some(BranchType::ConditionalBranch(ConditionalBranch::CBZ))
+            f if f == ConditionalBranch::Cbz.value() => {
+                Some(BranchType::ConditionalBranch(ConditionalBranch::Cbz))
             }
-            f if f == ConditionalBranch::CBNZ.value() => {
-                Some(BranchType::ConditionalBranch(ConditionalBranch::CBNZ))
+            f if f == ConditionalBranch::Cbnz.value() => {
+                Some(BranchType::ConditionalBranch(ConditionalBranch::Cbnz))
             }
-            f if f == ConditionalBranch::TBZ.value() => {
-                Some(BranchType::ConditionalBranch(ConditionalBranch::TBZ))
+            f if f == ConditionalBranch::Tbz.value() => {
+                Some(BranchType::ConditionalBranch(ConditionalBranch::Tbz))
             }
-            f if f == ConditionalBranch::TBNZ.value() => {
-                Some(BranchType::ConditionalBranch(ConditionalBranch::TBNZ))
+            f if f == ConditionalBranch::Tbnz.value() => {
+                Some(BranchType::ConditionalBranch(ConditionalBranch::Tbnz))
             }
-            f if f == DirectBranch::B.value() => Some(BranchType::UnconditionalBranch(
-                UnconditionalBranch::DirectBranch(DirectBranch::B),
-            )),
-            f if f == DirectBranch::BL.value() => Some(BranchType::UnconditionalBranch(
-                UnconditionalBranch::DirectBranch(DirectBranch::BL),
-            )),
-            f if f == DirectBranch::RET.value() => Some(BranchType::UnconditionalBranch(
-                UnconditionalBranch::DirectBranch(DirectBranch::RET),
-            )),
-            f if f == IndirectBranch::BR.value() => Some(BranchType::UnconditionalBranch(
-                UnconditionalBranch::IndirectBranch(IndirectBranch::BR),
-            )),
-            f if f == IndirectBranch::BLR.value() => Some(BranchType::UnconditionalBranch(
-                UnconditionalBranch::IndirectBranch(IndirectBranch::BLR),
-            )),
-            f if f == IndirectBranch::BLRAA.value() => Some(BranchType::UnconditionalBranch(
-                UnconditionalBranch::IndirectBranch(IndirectBranch::BLRAA),
-            )),
-            f if f == IndirectBranch::BLRAAZ.value() => Some(BranchType::UnconditionalBranch(
-                UnconditionalBranch::IndirectBranch(IndirectBranch::BLRAAZ),
-            )),
-            f if f == IndirectBranch::BLRAB.value() => Some(BranchType::UnconditionalBranch(
-                UnconditionalBranch::IndirectBranch(IndirectBranch::BLRAB),
-            )),
-            f if f == IndirectBranch::BLRABZ.value() => Some(BranchType::UnconditionalBranch(
-                UnconditionalBranch::IndirectBranch(IndirectBranch::BLRABZ),
-            )),
+            f if f == UnconditionalBranch::B.value() => {
+                Some(BranchType::UnconditionalBranch(UnconditionalBranch::B))
+            }
+            f if f == UnconditionalBranch::Bl.value() => {
+                Some(BranchType::UnconditionalBranch(UnconditionalBranch::Bl))
+            }
+            f if f == UnconditionalBranch::Ret.value() => {
+                Some(BranchType::UnconditionalBranch(UnconditionalBranch::Ret))
+            }
+            f if f == UnconditionalBranch::Br.value() => {
+                Some(BranchType::UnconditionalBranch(UnconditionalBranch::Br))
+            }
+            f if f == UnconditionalBranch::Blr.value() => {
+                Some(BranchType::UnconditionalBranch(UnconditionalBranch::Blr))
+            }
+            f if f == UnconditionalBranch::Blraa.value() => {
+                Some(BranchType::UnconditionalBranch(UnconditionalBranch::Blraa))
+            }
+            f if f == UnconditionalBranch::Blraaz.value() => {
+                Some(BranchType::UnconditionalBranch(UnconditionalBranch::Blraaz))
+            }
+            f if f == UnconditionalBranch::Blrab.value() => {
+                Some(BranchType::UnconditionalBranch(UnconditionalBranch::Blrab))
+            }
+            f if f == UnconditionalBranch::Blrabz.value() => {
+                Some(BranchType::UnconditionalBranch(UnconditionalBranch::Blrabz))
+            }
             _ => None,
         }
     } else {
@@ -411,19 +354,26 @@ pub fn determine_instruction_type(
     };
 
     if let Some(branch_type) = branch_type {
-        AssemblyInstruction::CTI(ControlTransferInstruction {
+        AssemblyInstruction {
             raw_content: assembly_line.to_string(),
             line_number,
             address: extract_address(assembly_line),
-            target_address: extract_target_address(assembly_line, &regex_container.target_address),
-            branch_type,
-        })
+            instruction_type: InstructionType::Cti(CtiData {
+                target_address: extract_target_address(
+                    assembly_line,
+                    &regex_container.target_address,
+                ),
+                branch_type,
+                reachable: true,
+            }),
+        }
     } else {
-        AssemblyInstruction::NCTI(NonControlTransferInstruction {
+        AssemblyInstruction {
             raw_content: assembly_line.to_string(),
             line_number,
             address: extract_address(assembly_line),
-        })
+            instruction_type: InstructionType::Ncti,
+        }
     }
 }
 

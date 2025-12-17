@@ -4,7 +4,7 @@ use regex::Regex;
 
 use crate::module::{
     analyzer::Subroutine,
-    instruction::{self, AssemblyInstruction, BranchTargetAddress, ControlTransferInstruction},
+    instruction::{self, AssemblyInstruction, BranchTargetAddress},
 };
 
 pub struct BasicBlock {
@@ -122,34 +122,29 @@ pub fn extract_basic_blocks(
 /// ## Returns
 /// - `Some(BranchTargetAddress)`: If the `AssemblyInstruction` is a `ControlFlowInstruciton`
 /// - `None`: Otherwise
-pub fn extract_branch_target_address(asm_ins: &AssemblyInstruction) -> Option<BranchTargetAddress> {
-    match asm_ins {
-        AssemblyInstruction::CTI(cti) => match &cti.branch_type {
+pub fn extract_branch_target_address(
+    asm_ins: &AssemblyInstruction,
+    indirect_branch_regex: &Regex,
+) -> Option<BranchTargetAddress> {
+    match &asm_ins.instruction_type {
+        instruction::InstructionType::Cti(cti_data) => match &cti_data.branch_type {
             instruction::BranchType::ConditionalBranch(cb) => match cb {
                 _ => Some(BranchTargetAddress::Direct(
                     asm_ins.target_address().unwrap(),
                 )),
             },
             instruction::BranchType::UnconditionalBranch(ub) => match ub {
-                instruction::UnconditionalBranch::DirectBranch(db) => match db {
-                    instruction::DirectBranch::RET => Some(BranchTargetAddress::Indirect(
-                        asm_ins.target_address().unwrap(),
-                    )),
-                    _ => Some(BranchTargetAddress::Direct(
-                        asm_ins.target_address().unwrap(),
-                    )),
-                },
-                instruction::UnconditionalBranch::IndirectBranch(ib) => match ib {
-                    instruction::IndirectBranch::BR | instruction::IndirectBranch::BLR => Some(
-                        BranchTargetAddress::Indirect(asm_ins.target_address().unwrap()),
-                    ),
-                    _ => Some(BranchTargetAddress::Direct(
-                        asm_ins.target_address().unwrap(),
-                    )),
-                },
+                instruction::UnconditionalBranch::Ret
+                | instruction::UnconditionalBranch::Br
+                | instruction::UnconditionalBranch::Blr => Some(BranchTargetAddress::Indirect(
+                    asm_ins.target_address().unwrap(),
+                )),
+                _ => Some(BranchTargetAddress::Direct(
+                    asm_ins.target_address().unwrap(),
+                )),
             },
         },
-        AssemblyInstruction::NCTI(_ncti) => None,
+        instruction::InstructionType::Ncti => None,
     }
 }
 
