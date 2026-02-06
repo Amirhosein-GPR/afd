@@ -5,7 +5,8 @@ use regex::{Captures, Regex};
 
 use crate::module::{
     config::{
-        ASSEMBLY_EXT_CLEANED, ASSEMBLY_EXT_ORGINAL, ASSEMBLY_EXT_UNCOMMENTED, BINARY_EXT, TRACE_EXT,
+        ASSEMBLY_EXT_CLEANED_FULL, ASSEMBLY_EXT_CLEANED_NECESSARY, ASSEMBLY_EXT_ORGINAL,
+        BINARY_EXT, TRACE_EXT,
     },
     regex::RegexContainer,
 };
@@ -26,10 +27,13 @@ pub struct Cli {
     pub binary_path: Option<String>,
 }
 
+#[derive(Debug)]
 pub enum FileType {
-    Original,
-    Uncommented,
-    Cleaned,
+    AsmOriginal,
+    AsmCleanedFull,
+    AsmCleanedNecessary,
+    CfgText,
+    CfgGraphics,
 }
 
 pub struct InputManager {
@@ -37,6 +41,8 @@ pub struct InputManager {
     bin_paths: Vec<String>,
     asm_paths: Option<Vec<String>>,
     trace_paths: Option<Vec<String>>,
+    cfg_text_paths: Option<Vec<String>>,
+    cfg_graphics_paths: Option<Vec<String>>,
 }
 
 impl InputManager {
@@ -45,10 +51,6 @@ impl InputManager {
 
         if !fs::exists("workspace/gem5_branch_traces").unwrap() {
             fs::create_dir("workspace/gem5_branch_traces").unwrap();
-        }
-
-        if !fs::exists("workspace/cleaned_assemblies").unwrap() {
-            fs::create_dir("workspace/cleaned_assemblies").unwrap();
         }
 
         let cli = Cli::parse();
@@ -63,6 +65,8 @@ impl InputManager {
                     bin_paths,
                     asm_paths: None,
                     trace_paths: None,
+                    cfg_text_paths: None,
+                    cfg_graphics_paths: None,
                 }
             }
             None => match cli.binary_path.as_ref() {
@@ -71,6 +75,8 @@ impl InputManager {
                     bin_paths: Self::get_files_in_path(&binary_path),
                     asm_paths: None,
                     trace_paths: None,
+                    cfg_text_paths: None,
+                    cfg_graphics_paths: None,
                 },
                 None => {
                     panic!(
@@ -105,53 +111,53 @@ impl InputManager {
         }
 
         match file_type {
-            FileType::Original => {
+            FileType::AsmOriginal => {
                 Self::create_parent_dirs(self.asm_paths.as_ref().unwrap().first().unwrap());
                 self.asm_paths.clone().unwrap()
             }
-            FileType::Uncommented => {
-                let mut ucmt_file_paths = Vec::new();
+            FileType::AsmCleanedFull => {
+                let mut cleaned_full_file_paths = Vec::new();
                 for bin_path in &self.bin_paths {
                     let asm_path = bin_file_regex.replace(&bin_path, |caps: &Captures<'_>| {
                         format!(
-                            "{}{}{}{}",
-                            &caps[1], "assemblies/uncommented", &caps[2], ASSEMBLY_EXT_UNCOMMENTED
+                            "{}assemblies/cleaned_full{}{}",
+                            &caps[1], &caps[2], ASSEMBLY_EXT_CLEANED_FULL
                         )
                     });
-                    ucmt_file_paths.push(asm_path.to_string());
+                    cleaned_full_file_paths.push(asm_path.to_string());
                 }
 
-                Self::create_parent_dirs(ucmt_file_paths.first().unwrap());
-                ucmt_file_paths
+                Self::create_parent_dirs(cleaned_full_file_paths.first().unwrap());
+                cleaned_full_file_paths
             }
-            FileType::Cleaned => {
-                let mut cleaned_file_paths = Vec::new();
+            FileType::AsmCleanedNecessary => {
+                let mut cleaned_necessary_file_paths = Vec::new();
                 for bin_path in &self.bin_paths {
                     let asm_path = bin_file_regex.replace(&bin_path, |caps: &Captures<'_>| {
                         format!(
-                            "workspace/cleaned_assemblies{}{}",
-                            &caps[2], ASSEMBLY_EXT_CLEANED
+                            "{}assemblies/cleaned_necessary{}{}",
+                            &caps[1], &caps[2], ASSEMBLY_EXT_CLEANED_NECESSARY
                         )
                     });
-                    cleaned_file_paths.push(asm_path.to_string());
+                    cleaned_necessary_file_paths.push(asm_path.to_string());
                 }
 
-                Self::create_parent_dirs(cleaned_file_paths.first().unwrap());
-                cleaned_file_paths
+                Self::create_parent_dirs(cleaned_necessary_file_paths.first().unwrap());
+                cleaned_necessary_file_paths
+            }
+            _ => {
+                panic!("Wrong file type passed to get_assembly_paths function: {file_type:?}")
             }
         }
     }
 
-    pub fn gem5_trace_paths(&mut self, bin_file_regex: &Regex) -> &Vec<String> {
+    pub fn get_gem5_trace_paths(&mut self, bin_file_regex: &Regex) -> &Vec<String> {
         if self.trace_paths.is_none() {
             self.trace_paths = Some(Vec::new());
 
             for bin_path in &self.bin_paths {
                 let trace_path = bin_file_regex.replace(&bin_path, |caps: &Captures<'_>| {
-                    format!(
-                        "{}{}{}",
-                        "workspace/gem5_branch_traces", &caps[2], TRACE_EXT
-                    )
+                    format!("workspace/gem5_branch_traces{}{}", &caps[2], TRACE_EXT)
                 });
                 self.trace_paths
                     .as_mut()
@@ -161,6 +167,48 @@ impl InputManager {
         }
 
         self.trace_paths.as_ref().unwrap()
+    }
+
+    pub fn get_cfg_paths(&mut self, bin_file_regex: &Regex, file_type: FileType) -> &Vec<String> {
+        match file_type {
+            FileType::CfgText => {
+                if self.cfg_text_paths.is_none() {
+                    self.cfg_text_paths = Some(Vec::new());
+
+                    for bin_path in &self.bin_paths {
+                        let cfg_text_path = bin_file_regex
+                            .replace(&bin_path, |caps: &Captures<'_>| {
+                                format!("workspace/cfg/text{}", &caps[2])
+                            });
+                        self.cfg_text_paths
+                            .as_mut()
+                            .unwrap()
+                            .push(cfg_text_path.to_string());
+                    }
+                }
+                self.cfg_text_paths.as_ref().unwrap()
+            }
+            FileType::CfgGraphics => {
+                if self.cfg_graphics_paths.is_none() {
+                    self.cfg_graphics_paths = Some(Vec::new());
+
+                    for bin_path in &self.bin_paths {
+                        let cfg_graphics_path = bin_file_regex
+                            .replace(&bin_path, |caps: &Captures<'_>| {
+                                format!("workspace/cfg/graphics{}", &caps[2])
+                            });
+                        self.cfg_graphics_paths
+                            .as_mut()
+                            .unwrap()
+                            .push(cfg_graphics_path.to_string());
+                    }
+                }
+                self.cfg_graphics_paths.as_ref().unwrap()
+            }
+            _ => {
+                panic!("Wrong file type passed to get_cfg_paths function: {file_type:?}");
+            }
+        }
     }
 
     fn get_files_in_path(input_path: &str) -> Vec<String> {
@@ -202,7 +250,7 @@ impl InputManager {
         bin_paths
     }
 
-    fn create_parent_dirs(file_path: &str) {
+    pub fn create_parent_dirs(file_path: &str) {
         let parent_dir_path = file_path.rsplit_once('/').unwrap().0;
         if !fs::exists(parent_dir_path).unwrap() {
             fs::create_dir_all(parent_dir_path).unwrap();
@@ -224,20 +272,16 @@ pub fn process_input_files(input_manager: &mut InputManager, regex_container: &R
         );
     }
 
-    let asm_path =
-        input_manager.get_assembly_paths(&regex_container.bin_file_regex, FileType::Original);
-    let uasm_path =
-        input_manager.get_assembly_paths(&regex_container.bin_file_regex, FileType::Uncommented);
+    let asm_paths =
+        input_manager.get_assembly_paths(&regex_container.bin_file_regex, FileType::AsmOriginal);
 
-    objdump_binary_files(input_manager.get_binary_paths(), &asm_path);
-
-    create_uncommented_files(&asm_path, &uasm_path);
+    objdump_binary_files(input_manager.get_binary_paths(), &asm_paths);
 
     gem5_simulate(input_manager.get_binary_paths());
 }
 
 /// Runs a command and waits for it to finish it's execution.
-fn run_command(cmd: &str, args: &[&str]) {
+pub fn run_command(cmd: &str, args: &[&str]) {
     Command::new(cmd)
         .args(args)
         .spawn()
@@ -267,13 +311,13 @@ fn run_command_and_get_output(cmd: &str, args: &[&str]) -> String {
 /// Compiles source file(s) in C language with the help of 'aarch64-linux-gnu-gcc' cross compiler.
 fn gcc_compile_source_files(src_paths: &[String], bin_paths: &[String]) {
     println!("\n======== Compiling With 'aarch64-linux-gnu-gcc' Cross Compiler ========");
-    println!("CMD ---> aarch64-linux-gnu-gcc [SOURCE_PATH] -static -o [BINARY_PATH]\n");
+    println!("CMD ---> aarch64-linux-gnu-gcc [SOURCE_PATH] -static -lm -o [BINARY_PATH]\n");
 
     for i in 0..src_paths.len() {
         println!("Compiling: '{}'", src_paths[i]);
         run_command(
             "aarch64-linux-gnu-gcc",
-            &[&src_paths[i], "-static", "-o", &bin_paths[i]],
+            &[&src_paths[i], "-static", "-lm", "-o", &bin_paths[i]],
         );
         println!("Saved At: '{}'\n", bin_paths[i]);
     }
@@ -284,7 +328,7 @@ fn gcc_compile_source_files(src_paths: &[String], bin_paths: &[String]) {
 /// Disassembles aarch64 binay file(s) with the help of 'aarch64-linux-gnu-objdump' disassembler.
 fn objdump_binary_files(bin_paths: &[String], asm_paths: &[String]) {
     println!("\n===== Disassembling With 'aarch64-linux-gnu-objdump' Disassembler =====");
-    println!("CMD ---> aarch64-linux-gnu-objdump -d [BINARY_PATH] >> [DISASSEMBLED_PATH]\n");
+    println!("CMD ---> aarch64-linux-gnu-objdump -d [BINARY_PATH] > [DISASSEMBLED_PATH]\n");
 
     for i in 0..bin_paths.len() {
         println!("ObjDump disassembling: '{}'", bin_paths[i]);
@@ -297,22 +341,8 @@ fn objdump_binary_files(bin_paths: &[String], asm_paths: &[String]) {
     println!("\n======================= Disassembling Finished! =======================");
 }
 
-/// Creates the uncommented file equivalent from original assembly file.
-fn create_uncommented_files(asm_paths: &[String], uasm_paths: &[String]) {
-    for i in 0..asm_paths.len() {
-        let asm_string = fs::read_to_string(&asm_paths[i]).unwrap();
-        let mut uncommented_string = Vec::new();
-        for asl in asm_string.lines() {
-            let temp = asl.split("//").collect::<Vec<_>>();
-            uncommented_string.push(temp[0].trim());
-        }
-
-        fs::write(&uasm_paths[i], uncommented_string.join("\n")).unwrap();
-    }
-}
-
 /// Simulates the execution of the binary programs(s) with the help of `gem5` simulator.
-fn gem5_simulate(binary_file_paths: &[String]) {
+fn gem5_simulate(bin_paths: &[String]) {
     println!("\n================== Simulating With 'gem5' Simulator ===================");
     println!(
         "CMD ---> ../programs/gem5/build/ALL/gem5.opt --debug-flags=Branch --debug-file=../gem5_branch_traces/[TRACE_FILE_NAME].trace ../programs/gem5_arm_script.py --binary [BINARY_FILE_PATH]\n"
@@ -320,10 +350,10 @@ fn gem5_simulate(binary_file_paths: &[String]) {
 
     let file_regex = Regex::new(r"(\w*)\.run$").unwrap();
 
-    for bfp in binary_file_paths {
-        let file_name = file_regex.captures(bfp).unwrap().get(1).unwrap().as_str();
+    for bp in bin_paths {
+        let file_name = file_regex.captures(bp).unwrap().get(1).unwrap().as_str();
 
-        println!("gem5 simulating: '{bfp}'\n");
+        println!("gem5 simulating: '{bp}'\n");
         run_command_and_set_dir(
             "../programs/gem5/build/ALL/gem5.opt",
             &[
@@ -331,7 +361,7 @@ fn gem5_simulate(binary_file_paths: &[String]) {
                 format!("--debug-file=../gem5_branch_traces/{file_name}.trace").as_str(),
                 "../programs/gem5_arm_script.py",
                 "--binary",
-                bfp,
+                bp,
             ],
             "workspace",
         );
