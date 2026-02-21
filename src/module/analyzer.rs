@@ -1,14 +1,11 @@
 use regex::Regex;
-use std::{
-    collections::{HashSet, VecDeque},
-    fs,
-};
+use std::fs;
 
 use crate::module::{
+    assembly::{self, AssemblyInstruction, AssemblyInstructionId, Subroutine},
     basic_block::{self, BasicBlock},
     cfg::ControlFlowGraph,
     input::{FileType, InputManager},
-    instruction::{AssemblyInstruction, InstructionType, TargetAddress},
     regex::RegexContainer,
 };
 
@@ -54,76 +51,24 @@ impl AssemblyAnalyzer {
 
     /// Prints subroutine data for each of the assembly data.
     pub fn print(&self) {
-        // process::exit(0);
-
         for ad in &self.cfg.asm_data_vec {
-            // for s in &ad.subroutines {
-            //     println!("Subroutine {}: {{", s.get_name());
-            //     println!(
-            //         "  Start Line: {},\n  End Line: {},\n  Assembly Instructions: [",
-            //         s.start_line, s.end_line,
-            //     );
-            //     for (index, ai) in s.assembly_instructions.iter().enumerate() {
-            //         println!(
-            //             "    Instruction #{}: {{\n      Content: \"{}\"\n      Meta Data: {}\n    }}",
-            //             index + 1,
-            //             ai.raw_content(),
-            //             ai.formatted_string()
-            //         );
-            //     }
-            //     println!("  ]\n");
-            //     println!("}}\n");
-            // }
             for (index, basic_block) in ad.basic_blocks.iter().enumerate() {
                 println!("Basic block #{}: {{", index + 1);
-                for (i, ai) in basic_block.assembly_instructions.iter().enumerate() {
+                for (i, asm_line_id) in basic_block.asm_inst_ids.iter().enumerate() {
                     println!(
                         "  Instruction #{} => [{}]: \"{}\"",
                         i + 1,
-                        ai.line_number,
-                        ai.raw_content()
+                        ad.subroutines[asm_line_id.subroutine_index].asm_insts
+                            [asm_line_id.asm_inst_index]
+                            .asm_line_number,
+                        ad.subroutines[asm_line_id.subroutine_index].asm_insts
+                            [asm_line_id.asm_inst_index]
+                            .content
                     );
                 }
                 println!("}}");
             }
         }
-    }
-}
-
-/// Represents a subroutine in an assembly source file.
-///
-/// It cotains some useful info about a subroutine in an assembly file.
-pub struct Subroutine {
-    pub definition_label: String,
-    pub start_line: u32,
-    pub end_line: u32,
-    pub assembly_instructions: Vec<AssemblyInstruction>,
-    pub necessary: bool,
-}
-
-impl Subroutine {
-    pub fn get_name(&self) -> String {
-        self.definition_label
-            .trim()
-            .split(' ')
-            .last()
-            .unwrap()
-            .to_string()
-    }
-
-    fn find_related_subroutine_label_for_address(
-        subroutines: &[Subroutine],
-        asm_inst_address: &str,
-    ) -> String {
-        for subroutine in subroutines {
-            for asm_inst in &subroutine.assembly_instructions {
-                if asm_inst.address == asm_inst_address {
-                    return subroutine.get_name();
-                }
-            }
-        }
-
-        panic!("No subroutine label was found with the given address");
     }
 }
 
@@ -153,8 +98,6 @@ impl AssemblyData {
             &regex_container.gem5_trace_indirect_branch,
         );
 
-        Self::compute_and_flag_necessary_subroutines(&mut subroutines, regex_container);
-
         Self::save_necessary_subroutines(&subroutines, cn_asm_path);
 
         Self {
@@ -166,119 +109,58 @@ impl AssemblyData {
 
     /// Extracts subroutines from an uncommented assmbly file.
     fn extract_subroutines(asm_path: &str, regex_container: &RegexContainer) -> Vec<Subroutine> {
+        println!("=== Extracting Subroutines ===");
         // Reading the uncommented file
         let assembly_string = fs::read_to_string(asm_path).unwrap();
         let mut asm_lines = assembly_string.lines();
 
         let mut subroutines = Vec::new();
-        let mut line_number = 1;
+        let mut asm_line_number = 1;
         while let Some(asm_line) = asm_lines.next() {
             if regex_container.definition_label.is_match(asm_line) {
                 let definition_label = asm_line.to_string();
-                let start_line = line_number;
+                let start_line = asm_line_number + 1;
 
                 let mut assembly_instructions = Vec::new();
 
                 while let Some(asm_line) = asm_lines.next() {
-                    line_number += 1;
+                    asm_line_number += 1;
 
                     if asm_line.trim().is_empty() {
-                        let end_line = line_number - 1;
+                        let end_line = asm_line_number - 1;
 
                         subroutines.push(Subroutine {
                             definition_label,
                             start_line,
                             end_line,
-                            assembly_instructions,
+                            asm_insts: assembly_instructions,
                             necessary: false,
                         });
+
+                        println!("Subroutine #{} was extracted", subroutines.len());
 
                         break;
                     } else {
                         let cleaned_asm_line = asm_line.split("//").collect::<Vec<_>>()[0].trim();
 
                         assembly_instructions.push(AssemblyInstruction::new(
+                            AssemblyInstructionId {
+                                subroutine_index: subroutines.len(),
+                                asm_inst_index: assembly_instructions.len(),
+                            },
+                            0,
+                            asm_line_number,
                             cleaned_asm_line,
-                            line_number,
-                            regex_container,
+                            &regex_container.instruction_name,
                         ));
                     }
                 }
             }
 
-            line_number += 1;
+            asm_line_number += 1;
         }
 
         subroutines
-    }
-
-    fn compute_and_flag_necessary_subroutines(
-        subroutines: &mut [Subroutine],
-        regex_container: &RegexContainer,
-    ) {
-        let mut visited_subroutine_labels = HashSet::new();
-        let mut remaining_subroutine_labels = VecDeque::new();
-
-        visited_subroutine_labels.insert("<main>:".to_string());
-        remaining_subroutine_labels.push_back("<main>:".to_string());
-        while let Some(sub_label) = remaining_subroutine_labels.pop_front() {
-            for i in 0..subroutines.len() {
-                if subroutines[i].definition_label.contains(&sub_label) {
-                    subroutines[i].necessary = true;
-                    for asm_inst in &subroutines[i].assembly_instructions {
-                        if regex_container
-                            .jump_to_subroutine
-                            .is_match(&asm_inst.raw_content)
-                        {
-                            match &asm_inst.instruction_type {
-                                InstructionType::Cti(cti_data) => match &cti_data.target_address {
-                                    TargetAddress::Direct(target_address) => {
-                                        let subroutine_label =
-                                            Subroutine::find_related_subroutine_label_for_address(
-                                                subroutines,
-                                                &target_address,
-                                            );
-
-                                        if !visited_subroutine_labels.contains(&subroutine_label) {
-                                            visited_subroutine_labels
-                                                .insert(subroutine_label.clone());
-                                            remaining_subroutine_labels.push_back(subroutine_label);
-                                        }
-                                    }
-                                    TargetAddress::Indirect(_register) => {
-                                        // If asm_inst is unreachable it's OK to ignore it.
-                                        if cti_data.reachable {
-                                            let last_asm_ins_adr = u32::from_str_radix(
-                                                &subroutines
-                                                    .last()
-                                                    .unwrap()
-                                                    .assembly_instructions
-                                                    .last()
-                                                    .unwrap()
-                                                    .address,
-                                                16,
-                                            )
-                                            .unwrap();
-                                            // If basic block address is equal to the last asm_inst + 4, it means that it doesn't exist (doesn't belong to our program) and we can ignore it. If not, the program panics.
-                                            if cti_data.target_address.value()
-                                                != format!("{:x}", last_asm_ins_adr + 4)
-                                            {
-                                                panic!(
-                                                    "Error in finding necessary subroutines: Can not find the related subroutine for the indirect jump: {}",
-                                                    asm_inst.raw_content()
-                                                );
-                                            }
-                                        }
-                                    }
-                                },
-                                InstructionType::Ncti => {}
-                            }
-                        }
-                    }
-                    break;
-                }
-            }
-        }
     }
 
     fn save_subroutines(subroutines: &[Subroutine], cf_asm_path: &str) {
@@ -287,8 +169,8 @@ impl AssemblyData {
         for sub in subroutines {
             buffer.push(sub.definition_label.clone());
 
-            for asm_ins in &sub.assembly_instructions {
-                buffer.push(asm_ins.raw_content().to_string());
+            for asm_line in &sub.asm_insts {
+                buffer.push(asm_line.content.to_string());
             }
 
             buffer.push("".to_string());
@@ -306,8 +188,8 @@ impl AssemblyData {
             if subroutine.necessary {
                 buffer.push(subroutine.definition_label.clone());
 
-                for asm_ins in &subroutine.assembly_instructions {
-                    buffer.push(asm_ins.raw_content().to_string());
+                for asm_line in &subroutine.asm_insts {
+                    buffer.push(asm_line.content.to_string());
                 }
 
                 buffer.push("".to_string());
@@ -322,11 +204,20 @@ impl AssemblyData {
     fn extract_basic_blocks(
         subroutines: &mut [Subroutine],
         trace_path: &str,
-        indirect_branch_in_trace_regex: &Regex,
+        gem5_trace_indirect_branch_regex: &Regex,
     ) -> Vec<BasicBlock> {
-        let leaders =
-            basic_block::extract_leaders(subroutines, trace_path, indirect_branch_in_trace_regex);
-        let basic_blocks = basic_block::extract_basic_blocks(subroutines, leaders);
+        assembly::compute_target_ids(subroutines, trace_path, gem5_trace_indirect_branch_regex);
+
+        let leader_ids = basic_block::extract_leaders_ids(subroutines);
+
+        for leader_id in &leader_ids {
+            println!(
+                "Leaders:\n{}",
+                subroutines[leader_id.subroutine_index].asm_insts[leader_id.asm_inst_index].content
+            )
+        }
+
+        let basic_blocks = basic_block::extract_basic_blocks(subroutines, leader_ids);
 
         basic_blocks
     }

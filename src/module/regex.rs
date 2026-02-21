@@ -11,6 +11,7 @@ pub struct RegexContainer {
     pub target_address: Regex,
     pub gem5_trace_indirect_branch: Regex,
     pub jump_to_subroutine: Regex,
+    pub instruction_name: Regex,
 }
 
 impl RegexContainer {
@@ -30,7 +31,8 @@ impl RegexContainer {
             target_label: Regex::new(r"<\w+>$").unwrap(),
             target_address: Regex::new(r"(\w+)(?:\s+<.+>)?$").unwrap(),
             gem5_trace_indirect_branch: Regex::new(r"Commit branch:.*PC:0x(\w+) .*Indirect.*target:0x(\w+)").unwrap(),
-            jump_to_subroutine: Regex::new(r"^[0-9a-f]+:\s+[0-9a-f]+\s+(?:blr|bl)").unwrap()
+            jump_to_subroutine: Regex::new(r"^[0-9a-f]+:\s+[0-9a-f]+\s+(?:blr|bl)").unwrap(),
+            instruction_name: Regex::new(r"\w+:\s+\w+\s+([\w.]+)").unwrap(),
         }
     }
 }

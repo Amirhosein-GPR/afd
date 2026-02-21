@@ -1,247 +1,185 @@
-use std::{collections::HashSet, fs};
-
-use regex::Regex;
+use std::collections::{HashSet, VecDeque};
 
 use crate::module::{
-    analyzer::Subroutine,
+    assembly::{AssemblyInstruction, AssemblyInstructionId, AssemblyInstructionType, Subroutine},
     cfg::Edge,
-    instruction::{AssemblyInstruction, TargetAddress},
 };
 
 pub struct BasicBlock {
-    pub assembly_instructions: Vec<AssemblyInstruction>,
+    pub asm_inst_ids: Vec<AssemblyInstructionId>,
     pub edges: Vec<Edge>,
-    pub subroutine_index: usize,
 }
 
 impl BasicBlock {
-    pub fn new(
-        asm_instructions: Vec<AssemblyInstruction>,
-        edges: Vec<Edge>,
-        subroutine_index: usize,
-    ) -> Self {
+    pub fn new(asm_inst_ids: Vec<AssemblyInstructionId>, edges: Vec<Edge>) -> Self {
         Self {
-            assembly_instructions: asm_instructions,
+            asm_inst_ids,
             edges,
-            subroutine_index,
         }
     }
 
-    pub fn get_address(&self) -> String {
-        self.assembly_instructions.first().unwrap().address()
-    }
-
-    pub fn next_basic_block_adr(&self) -> String {
-        let last_bb_adr = self.assembly_instructions.last().unwrap().address();
-        let next_bb_adr = u32::from_str_radix(&last_bb_adr, 16).unwrap() + 4;
-
-        format!("{:x}", next_bb_adr)
-    }
-
-    pub fn last_asm_instruction(&self) -> &AssemblyInstruction {
-        self.assembly_instructions.last().unwrap()
+    pub fn last_asm_instruction<'a>(
+        &self,
+        subroutines: &'a [Subroutine],
+    ) -> &'a AssemblyInstruction {
+        let last_asm_inst_id = self.asm_inst_ids.last().unwrap();
+        &subroutines[last_asm_inst_id.subroutine_index].asm_insts[last_asm_inst_id.asm_inst_index]
     }
 }
 
-pub fn extract_leaders(
-    subroutines: &mut [Subroutine],
-    trace_path: &str,
-    indirect_branch_in_trace_regex: &Regex,
-) -> Vec<AssemblyInstruction> {
-    println!("=== Extracting Leaders and Finding Possible Dynamic Target Addresses ===");
+pub fn extract_leaders_ids(subroutines: &mut [Subroutine]) -> Vec<AssemblyInstructionId> {
+    println!("=== Extracting Leaders ===");
 
-    let mut leaders = HashSet::new();
+    let mut leader_ids = HashSet::new();
 
-    // First assembly instruction of the first subroutine is a leader.
-    leaders.insert(subroutines[0].assembly_instructions[0].clone());
+    let main_subroutine_index = Subroutine::get_main_subroutine_index(subroutines);
+    subroutines[main_subroutine_index].necessary = true;
+    // First instruciton of the main subroutine is a leader.
+    leader_ids.insert(AssemblyInstructionId {
+        subroutine_index: main_subroutine_index,
+        asm_inst_index: 0,
+    });
 
-    let mut resolved_dynamic_target_address_count = 0;
-    let mut subroutines_counter = 0;
-    for i in 0..subroutines.len() {
-        subroutines_counter += 1;
-        let mut next_asm_ins_is_leader = false;
+    // nec_sub_ind = necessary_subroutines_indices
+    let mut nec_sub_ind_hs = HashSet::new();
+    let mut nec_sub_ind_vec = VecDeque::new();
+    nec_sub_ind_hs.insert(main_subroutine_index);
+    nec_sub_ind_vec.push_back(main_subroutine_index);
 
-        let mut j = 0;
-        while j < subroutines[i].assembly_instructions.len() {
-            match subroutines[i].assembly_instructions[j].get_target_address() {
-                Some(bta) => {
-                    match bta {
-                        TargetAddress::Direct(target_address) => {
-                            // The target instruction of a jump instruction is a leader.
-                            if let Some(target_asm_ins) =
-                                find_asm_ins_by_address(subroutines, &target_address)
-                            {
-                                leaders.insert(target_asm_ins);
-                            } else {
-                                let last_asm_ins_adr = u32::from_str_radix(
-                                    subroutines
-                                        .last()
-                                        .unwrap()
-                                        .assembly_instructions
-                                        .last()
-                                        .unwrap()
-                                        .address
-                                        .as_str(),
-                                    16,
-                                )
-                                .unwrap();
-                                if target_address == format!("{:x}", last_asm_ins_adr + 4) {
-                                    println!(
-                                        "Info: Instruction at address \"0x{target_address}\" was not found in the program's assembly.\nIt's the address of the first instruction that comes after the last instruction of the program (\"0x{last_asm_ins_adr:x}\")"
-                                    );
-                                } else {
-                                    panic!(
-                                        "Error: No insturciton with the given address was found: \"{target_address}\"."
-                                    );
-                                }
+    let mut return_stack = Vec::new();
+    let mut j = 0;
+
+    while let Some(mut i) = nec_sub_ind_vec.pop_front() {
+        'outer_loop: loop {
+            while j < subroutines[i].asm_insts.len() {
+                let asm_inst = &subroutines[i].asm_insts[j];
+
+                if i == main_subroutine_index && j == subroutines[i].asm_insts.len() - 1 {
+                    let mut leader_ids = leader_ids.into_iter().collect::<Vec<_>>();
+                    leader_ids.sort_unstable();
+
+                    return leader_ids;
+                }
+
+                let target_ids = asm_inst.get_target_ids(subroutines);
+
+                for target_id in &target_ids {
+                    leader_ids.insert(target_id.clone());
+                }
+
+                match &asm_inst.inst_type {
+                    AssemblyInstructionType::CtiUnconditional(inst_name, _ta) => {
+                        if inst_name == "bl" || inst_name == "blr" {
+                            if nec_sub_ind_hs.insert(target_ids[0].subroutine_index) {
+                                nec_sub_ind_vec.push_back(target_ids[0].subroutine_index);
+                                subroutines[target_ids[0].subroutine_index].necessary = true;
+
+                                return_stack.push(AssemblyInstructionId {
+                                    subroutine_index: i,
+                                    asm_inst_index: j + 1,
+                                });
+
+                                i = target_ids[0].subroutine_index;
+                                j = target_ids[0].asm_inst_index;
+
+                                continue 'outer_loop;
+                            }
+                        } else if inst_name == "ret" {
+                            if let Some(return_asm_inst_id) = return_stack.pop() {
+                                i = return_asm_inst_id.subroutine_index;
+                                j = return_asm_inst_id.asm_inst_index;
+
+                                continue 'outer_loop;
+                            } else if i != main_subroutine_index {
+                                panic!("No assembly instruciton return id is found!");
                             }
                         }
-                        TargetAddress::Indirect(_register) => {
-                            let target_address = extract_target_address_from_gem5_trace(
-                                trace_path,
-                                indirect_branch_in_trace_regex,
-                                &subroutines[i].assembly_instructions[j].address(),
-                            );
-
-                            if let Some(target_address) = target_address {
-                                subroutines[i].assembly_instructions[j]
-                                    .set_direct_target_address(target_address);
-                                resolved_dynamic_target_address_count += 1;
-                                continue;
-                            } else {
-                                subroutines[i].assembly_instructions[j].flag_as_unreachable();
-                            }
-                        }
                     }
-
-                    // If this instruction is followed by a jump instruction (next_asm_ins_is_leader == true), it is a leader.
-                    if next_asm_ins_is_leader {
-                        leaders.insert(subroutines[i].assembly_instructions[j].clone());
-                    } else {
-                        next_asm_ins_is_leader = true;
-                    }
+                    _ => {}
                 }
-                None => {
-                    if next_asm_ins_is_leader {
-                        leaders.insert(subroutines[i].assembly_instructions[j].clone());
-                        next_asm_ins_is_leader = false;
-                    }
-                }
+
+                j += 1;
             }
 
-            j += 1;
+            break;
         }
-        let sub_len = subroutines.len();
-        println!(
-            "Subroutine {subroutines_counter}/{sub_len} (Progress: {:.1}%), Leader Count: {}, Resolved Dynamic Target Address Count: {}",
-            (subroutines_counter as f32 / sub_len as f32 * 100.0),
-            leaders.len(),
-            resolved_dynamic_target_address_count
-        );
     }
 
-    let mut leaders = leaders.into_iter().collect::<Vec<_>>();
-    leaders.sort_unstable_by_key(|ai| ai.line_number);
-
-    leaders
+    panic!(
+        "Leader extraction failed! Couldn't analyze till the last assembly instruciton of the main subroutine!"
+    );
 }
 
 pub fn extract_basic_blocks(
     subroutines: &[Subroutine],
-    leaders: Vec<AssemblyInstruction>,
+    leader_ids: Vec<AssemblyInstructionId>,
 ) -> Vec<BasicBlock> {
+    println!("=== Extracting Basic Blocks ===");
+
     let mut basic_blocks = Vec::new();
-    let mut asm_insts = Vec::new();
-    let mut leader_iter = leaders.into_iter();
+    let mut asm_inst_ids = Vec::new();
 
-    // The first leader should be skipped because it is always the first instruction and is not needed for basic block detection.
-    leader_iter.next();
+    for i in 0..leader_ids.len() {
+        let mut current_asm_inst_id = leader_ids[i].clone();
 
-    if let Some(mut current_leader) = leader_iter.next() {
-        'outer: for (sub_index, subroutine) in subroutines.iter().enumerate() {
-            for (ai_index, asm_ins) in subroutine.assembly_instructions.iter().enumerate() {
-                // We compare line numbers because there's lower overhead doing this (they are u32) compared to string comparision.
-                if asm_ins.line_number == current_leader.line_number {
-                    basic_blocks.push(BasicBlock::new(asm_insts, Vec::new(), sub_index));
-                    asm_insts = Vec::new();
+        if i + 1 < leader_ids.len() {
+            let next_leader_id = &leader_ids[i + 1];
 
-                    if let Some(next_leader) = leader_iter.next() {
-                        current_leader = next_leader;
-
-                        asm_insts.push(asm_ins.clone());
+            loop {
+                for j in (current_asm_inst_id.asm_inst_index)
+                    ..subroutines[current_asm_inst_id.subroutine_index]
+                        .asm_insts
+                        .len()
+                {
+                    if current_asm_inst_id.subroutine_index == next_leader_id.subroutine_index
+                        && j == next_leader_id.asm_inst_index
+                    {
+                        basic_blocks.push(BasicBlock::new(asm_inst_ids, Vec::new()));
+                        asm_inst_ids = Vec::new();
+                        break;
                     } else {
-                        for sub_index in sub_index..subroutines.len() {
-                            for ai_index in
-                                ai_index..subroutines[sub_index].assembly_instructions.len()
-                            {
-                                asm_insts.push(
-                                    subroutines[sub_index].assembly_instructions[ai_index].clone(),
-                                );
-                            }
-                        }
-                        break 'outer;
+                        asm_inst_ids.push(AssemblyInstructionId {
+                            subroutine_index: current_asm_inst_id.subroutine_index,
+                            asm_inst_index: j,
+                        });
                     }
+                }
+                // It means that the above if condition (if current_leader_id...) has been evaluated to true and we have reached the next leader (leader_ids[i+1]).
+                if asm_inst_ids.len() == 0 {
+                    break;
                 } else {
-                    asm_insts.push(asm_ins.clone());
+                    current_asm_inst_id = AssemblyInstructionId {
+                        subroutine_index: current_asm_inst_id.subroutine_index + 1,
+                        asm_inst_index: 0,
+                    }
                 }
             }
-        }
-    } else {
-        for sub_index in 0..subroutines.len() {
-            for ai_index in 0..subroutines[sub_index].assembly_instructions.len() {
-                asm_insts.push(subroutines[sub_index].assembly_instructions[ai_index].clone());
+        } else {
+            for j in (current_asm_inst_id.asm_inst_index)
+                ..subroutines[current_asm_inst_id.subroutine_index]
+                    .asm_insts
+                    .len()
+            {
+                asm_inst_ids.push(AssemblyInstructionId {
+                    subroutine_index: current_asm_inst_id.subroutine_index,
+                    asm_inst_index: j,
+                });
             }
+
+            basic_blocks.push(BasicBlock::new(asm_inst_ids, Vec::new()));
+            break;
         }
     }
-    // This is the last basic block.
-    basic_blocks.push(BasicBlock::new(
-        asm_insts,
-        Vec::new(),
-        subroutines.len() - 1,
-    ));
 
     basic_blocks
 }
 
-fn extract_target_address_from_gem5_trace(
-    trace_path: &str,
-    indirect_branch_in_trace_regex: &Regex,
-    asm_ins_address: &str,
-) -> Option<String> {
-    let trace = fs::read_to_string(trace_path).unwrap();
-
-    for line in trace.lines() {
-        if let Some(cap) = indirect_branch_in_trace_regex.captures(line) {
-            if cap.get(1).unwrap().as_str() == asm_ins_address {
-                return Some(cap.get(2).unwrap().as_str().to_string());
-            }
-        }
-    }
-
-    None
-}
-
-pub fn find_asm_ins_by_address(
-    subroutines: &[Subroutine],
-    asm_ins_address: &str,
-) -> Option<AssemblyInstruction> {
-    for subroutine in subroutines {
-        for asm_ins in &subroutine.assembly_instructions {
-            if asm_ins.address() == asm_ins_address {
-                return Some(asm_ins.clone());
-            }
-        }
-    }
-
-    None
-}
-
-pub fn find_basic_block_index_by_address(
+pub fn find_basic_block_index_by_id(
     basic_blocks: &[BasicBlock],
-    basic_block_address: &str,
+    basic_block_id: &AssemblyInstructionId,
 ) -> Option<usize> {
     for (i, basic_block) in basic_blocks.iter().enumerate() {
-        if basic_block_address == basic_block.get_address() {
+        if basic_block_id == basic_block.asm_inst_ids.first().unwrap() {
             return Some(i);
         }
     }
